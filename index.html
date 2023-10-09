@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Living Lab Chat</title>
+    <script type="text/javascript" src="jquery-3.2.1.slim.min.js"></script>
+    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script> -->
+    <script src="socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function () {
+            var socket = io.connect('http://127.0.0.1:8000');
+
+            socket.on('connect', function () {
+                socket.emit('my_event', {
+                    data: 'I\'m connected!'
+                });
+            });
+            socket.on('disconnect', function () {
+                $('#log').append('<br>Disconnected');
+            });
+            socket.on('my_response', function (msg) {
+                $('#log').append('<br>Received: ' + msg.data);
+            });
+
+            // event handler for server sent data
+            // the data is displayed in the "Received" section of the page
+            // handlers for the different forms in the page
+            // these send data to the server in a variety of ways
+            $('form#emit').submit(function (event) {
+                socket.emit('my_event', {
+                    data: $('#emit_data').val()
+                });
+                return false;
+            });
+
+            $('form#send_room').submit(function (event) {
+                console.log($('#room_data').val());
+                socket.emit('message_event', {
+                    type: $('#type').val(),
+                    room_id: $('#room_name').val(),
+                    message_data: $('#room_data').val(),
+                    
+                    side: $('#side').val(),
+                    author: $('#author').val(),
+                    message_type: $('#message_type').val(),
+
+                });
+                return false;
+            });
+
+            $('form#disconnect').submit(function (event) {
+                socket.emit('disconnect_request');
+                return false;
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Dowell Living Lab Public Chat</h1>
+
+
+
+    <form id="send_room" method="POST" action='#'>
+        <input type="text" name="type" id="type" placeholder="Type">
+        <input type="text" name="room_name" id="room_name" placeholder="Room ID">
+        <input type="text" name="room_data" id="room_data" placeholder="Message Data">
+        <input type="text" name="side" id="side" placeholder="Side">
+        <input type="text" name="author" id="author" placeholder="Author">
+        <input type="text" name="message_type" id="message_type" placeholder="Messsage Type">
+        <input type="submit" value="Send to Room">
+    </form>
+
+    <form id="disconnect" method="POST" action="#">
+        <input type="submit" value="Disconnect">
+    </form>
+    <h2>Response:</h2>
+    <div>
+        <p id="log"></p>
+    </div>
+</body>
+
+</html>

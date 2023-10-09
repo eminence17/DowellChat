@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dowell Public Chat</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="bootstrap.min.css">
+
+
+  <script type="text/javascript" src="jquery-3.2.1.slim.min.js"></script>
+  <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script> -->
+  <script src="socket.io.min.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function () {
+      var socket = io.connect('http://127.0.0.1:8000');
+
+      socket.on('connect', function() {
+                socket.emit('my_event', {data: 'I\'m connected!'});
+            });
+
+      socket.on('disconnect', function () {
+        $('#log').append('<br>Disconnected');
+      });
+      socket.on('my_response', function (msg) {
+        // $('#log').append('<br>Received: ' + msg.data);
+        $('#log').append(
+          `
+        <div class="d-flex flex-row justify-content-start mb-4">
+                <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);">
+                  <p class="small mb-0" id="log">${msg.data}</p>
+                </div>
+              </div>
+        `);
+      });
+
+      // event handler for server sent data
+      // the data is displayed in the "Received" section of the page
+      // handlers for the different forms in the page
+      // these send data to the server in a variety of ways
+      $('form#emit').submit(function (event) {
+        socket.emit('my_event', {
+          data: $('#emit_data').val()
+        });
+        return false;
+      });
+
+      $('form#join').submit(function (event) {
+        socket.emit('join', {
+          room: $('#join_room').val()
+        });
+        room_name_join=$('#join_room').val();
+         $('#group').css('display', 'none');
+        $('#chat').css('display', 'flex');
+
+        $('#join_room').val()=="";
+        
+        return false;
+      });
+
+      $('form#send_room').submit(function (event) {
+        socket.emit('message_event', {
+          type: $('#type').val(),
+          room_id: room_name_join,
+          message_data: $('#room_data').val(),
+          side: $('#side').val(),
+          author: $('#author').val(),
+          message_type: $('#message_type').val(),
+
+        });
+        
+        return false;
+      });
+
+      $('form#disconnect').submit(function (event) {
+        socket.emit('disconnect_request');
+        return false;
+      });
+
+      $('#leaveroombtn').click(function (event){
+        socket.emit('leave', {room: room_name_join});
+        $('#group').css('display', 'flex');
+        $('#chat').css('display', 'none');
+       
+                return false;
+      });
+
+      $('#closeroombtn').click(function (event){
+        socket.emit('close_room', {room: room_name_join});
+        $('#group').css('display', 'flex');
+        $('#chat').css('display', 'none');
+                return false;
+      });
+      $('#disconnect').click(function (event){
+        socket.emit('disconnect_request');
+                return false;
+      });
+
+
+
+    });
+  </script>
+</head>
+
+<body>
+  <section id="group" style="background-color: #eee; display: flex;">
+    <div class="container py-5">
+
+      <div class="row d-flex justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-4">
+
+          <div class="card" id="chat1" style="border-radius: 15px;">
+            <div
+              class="card-header d-flex justify-content-between align-items-center p-3 bg-info text-white border-bottom-0"
+              style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+              <i class="fas fa-angle-left"></i>
+              <p class="mb-0 fw-bold">Dowell chat</p>
+              <i class="fas fa-times"></i>
+            </div>
+            <div class="card-body">
+
+              <div id="lo">
+
+              </div>
+              <form id="join" method="POST" action='#'>
+                <input class="form-control" type="text" name="join_room" id="join_room" placeholder="Room Name" required>
+                <br>
+                <button type="submit" class="btn btn-info btn-rounded float-end">Join Room</button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+  <section id="chat" style="background-color: #eee; display: none;">
+    <div class="container py-5">
+
+      <div class="row d-flex justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-6">
+
+          <div class="card" id="chat1" style="border-radius: 15px;">
+            <div
+              class="card-header d-flex justify-content-between align-items-center p-3 bg-info text-white border-bottom-0"
+              style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+              <i class="fas fa-angle-left"></i>
+              <p class="mb-0 fw-bold">Dowell chat</p>
+              <i class="fas fa-times"></i>
+            </div>
+            <div class="card-body">
+
+              <div id="log">
+
+              </div>
+              <!-- <div class="d-flex flex-row justify-content-start mb-4">
+                <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);">
+                  <p class="small mb-0" id="log">Hello How may i help you</p>
+                </div>
+              </div> -->
+
+              <!-- <div class="d-flex flex-row justify-content-end mb-4">
+                    <div class="p-3 me-3 border" style="border-radius: 15px; background-color: #fbfbfb;">
+                      <p class="small mb-0">Thank you, I really like your product.</p>
+                    </div>
+                 
+                  </div> -->
+
+              <!-- <div class="d-flex flex-row justify-content-start mb-4">
+                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
+                      alt="avatar 1" style="width: 45px; height: 100%;">
+                    <div class="ms-3" style="border-radius: 15px;">
+                      <div class="bg-image">
+                        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/screenshot1.webp"
+                          style="border-radius: 15px;" alt="video">
+                        <a href="#!">
+                          <div class="mask"></div>
+                        </a>
+                      </div>
+                    </div>
+                  </div> -->
+
+              <!-- <div class="d-flex flex-row justify-content-start mb-4">
+                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
+                      alt="avatar 1" style="width: 45px; height: 100%;">
+                    <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);">
+                      <p class="small mb-0">...</p>
+                    </div>
+                  </div> -->
+              <form id="send_room" method="POST" action='#'>
+                <input type="text" name="type" id="type" placeholder="Type" value="create_message" hidden>
+                <input type="text" name="room_name" id="room_name" placeholder="Room ID" value="test123" hidden>
+
+                <input type="text" name="side" id="side" placeholder="Side" value="true" hidden>
+                <input type="text" name="author" id="author" placeholder="Author" value="client" hidden>
+                <input type="text" name="message_type" id="message_type" placeholder="Messsage Type" value="text"
+                  hidden>
+                <div class="form-outline">
+                  <input class="form-control" type="text" name="room_data" id="room_data" placeholder="Message Data">
+
+                </div>
+               <br>
+                  <div class="row">
+                    <div class="col">
+                      <button type="submit" class="btn btn-info btn-rounded float-end">Send</button>
+                 
+                    </div>
+                    <div class="col">
+                      <button type="button" id="leaveroombtn" class="btn btn-info btn-rounded float-end">Leave Room</button>
+                
+                    </div>
+
+                    <div class="col">
+                      <button type="button" id="closeroombtn" class="btn btn-info btn-rounded float-end">Close Room</button>
+                
+                    </div>
+                    <div class="col">
+                      <button type="button" id="disconnect" class="btn btn-info btn-rounded float-end">Disconnect</button>
+                
+                    </div>
+                   
+                 </div>
+               
+              </form>
+
+
+
+
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</body>
+
+</html>
